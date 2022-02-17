@@ -88,20 +88,20 @@ def extract_inference(ad):
     #write basic information
     if income!=None:
         if age!='' and gender!='':
-            final_str="According to the data Google extract from your activties, Google infers that you are a " +age+' '+gender+' with a '+income+' family income. '
+            final_str="According to the data Google extract from your activities, Google infers that you are a " +age+' '+gender+' with a '+income+' family income. '
         elif age=='' and gender!='':
-            final_str="According to the data Google extract from your activties, Google infers that you are a "+gender+' with a '+income+' family income. '
+            final_str="According to the data Google extract from your activities, Google infers that you are a "+gender+' with a '+income+' family income. '
         elif age!='' and gender=='':
-            final_str="According to the data Google extract from your activties, Google infers that you are " +age+' with a '+income+' family income. '
+            final_str="According to the data Google extract from your activities, Google infers that you are " +age+' with a '+income+' family income. '
         elif age=='' and gender=='':
-            final_str="According to the data Google extract from your activties, Google infers that you have a " +income+' family income. '
+            final_str="According to the data Google extract from your activities, Google infers that you have a " +income+' family income. '
     elif income==None:
         if age!='' and gender!='':
-            final_str="According to the data Google extract from your activties, Google infers that you are a " +age+' '+gender+'. '
+            final_str="According to the data Google extract from your activities, Google infers that you are a " +age+' '+gender+'. '
         elif age!='' and gender=='':
-            final_str="According to the data Google extract from your activties, Google infers that you are " +age+'. '
+            final_str="According to the data Google extract from your activities, Google infers that you are " +age+'. '
         elif age=='' and gender!='':
-            final_str="According to the data Google extract from your activties, Google infers that you are a "+gender+'. '
+            final_str="According to the data Google extract from your activities, Google infers that you are a "+gender+'. '
         else:
             final_str=''
     if parental_status!='' and marrial_status!='':
@@ -112,19 +112,19 @@ def extract_inference(ad):
         final_str=final_str+ 'Google also infers that you are '+parental_status+'. '
     #write habits
     if len(lst_habit)>4:
-        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
+        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
         final_str2+='Google also noticed that you are interested in '+lst_habit[2]+', '+ lst_habit[3]+' and '+lst_habit[4]+'. '
     elif len(lst_habit)==4:
-        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
+        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
         final_str2+='Google also noticed that you are interested in '+lst_habit[2]+' and '+lst_habit[3]+'. '
     elif len(lst_habit)==3:
-        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+', '+ lst_habit[1]+' and '+ lst_habit[2]+'. '
+        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+', '+ lst_habit[1]+' and '+ lst_habit[2]+'. '
     elif len(lst_habit)==2:
-        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
+        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
     elif len(lst_habit)==1:
-        final_str2='From your activties and searches on Google, Google notices that you may be interested in '+lst_habit[0]+'. '
+        final_str2='From your activities and searches on Google, Google notices that you may be interested in '+lst_habit[0]+'. '
     elif len(lst_habit)==0:
-        final_str2='Google knows nothing about your habits because of your limited activty on Google. '
+        final_str2='Google knows nothing about your habits because of your limited activity on Google. '
     #write catgorical habits
     if len(music)>1:
         final_str2+='Among different types of musics, you enjoyed listening to'
@@ -146,7 +146,7 @@ def extract_inference(ad):
 st.title('Your Social Media Data Dashboard')
 st.header("Instagram Data Dashboard")
 try: 
-    uploaded_files = st.file_uploader("Upload here for your Instagram Data Dashboard", accept_multiple_files=True, key = 0)
+    uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, and personal.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
 
     sorted_files = []
     index = 0 
