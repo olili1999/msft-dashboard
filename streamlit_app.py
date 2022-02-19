@@ -22,6 +22,15 @@ from pandas.io.json import json_normalize
 from geopy.geocoders import Nominatim 
 import requests
 
+
+import nltk
+from nltk import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from textblob import TextBlob
+
+
+
+
 CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' # your Foursquare ID
 CLIENT_SECRET = 'CTHTUE1JSINGUNVXSDL0JGPO1CRKOE312RYYA21LEBKE5ZSA' # your Foursquare Secret
 VERSION = '20220208'
@@ -161,14 +170,15 @@ try:
         for file in sorted_files: 
             name = str(file[1])
             if name.startswith("account_based_in"): 
-                account_based_json = json.load(sorted_files[0][2])
+                account_based_json = json.load(file[2])
             elif name.startswith("advertisers"):
-                advertisers_using_json = json.load(sorted_files[1][2])
+                advertisers_using_json = json.load(file[2])
             elif name.startswith("liked"):
-                liked_posts_json = json.load(sorted_files[2][2])
+                liked_posts_json = json.load(file[2])
             elif name.startswith("personal"):
-                personal_information_json = json.load(sorted_files[3][2])
-
+                personal_information_json = json.load(file[2])
+            elif name.startswith("post_comments"): 
+                post_comments_json = json.load(file[2])
 
     # profile information
     user_name = personal_information_json['profile_user'][0]['string_map_data']['Username']['value']
@@ -224,17 +234,84 @@ try:
         st.header('Total Data Collected')
 
     st.write('')
-    row4_space1, row4_1, row4_space2, row4_2, row4_space4 = st.columns(
-        (.1, 1, .1, 1, .1))
+    row4_space1, row4, row4_space4 = st.columns(
+        (.1, 1, .1))
 
 
-    with row4_1, _lock: 
+    with row4, _lock: 
         total_file_size = 0 
         for file in sorted_files: 
             total_file_size += len(file[3])
         total_file_size = total_file_size * (0.000001)
         num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
         st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
+
+
+
+    st.write('')
+    row5_space1, row5, row5_space2 = st.columns((0.1, 1, 0.1))
+
+    with row5, _lock: 
+        # Get all Instagram comments into one list
+        comment_list = []
+        list_of_dic = post_comments_json['comments_media_comments']
+        for index in range(len(list_of_dic)):
+            comment_list.append(list_of_dic[index]['string_list_data'][0]['value'])
+        # print(comment_list)
+        #Read comments to a dataframe
+        df5 = pd.DataFrame(comment_list, columns = ['Comment'])
+        #Function to remove non-ASCII from comments 
+        def remove_non_ascii(text): 
+            return ''.join(i for i in text if ord(i)<128) 
+        df5['Comment'] = df5['Comment'].apply(remove_non_ascii) 
+        #Create stopword list
+        stopwords = set(stopwords.words('english'))
+        stopwords.update(["u", "n", "i'm", "r"])
+        #Data preprocessing
+        df5['Comment'] = df5['Comment'].astype(str)
+        df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
+        df5['Comment'] = df5['Comment'].str.replace(r'[^\w\s]+', '')
+        df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
+
+        # Define a function which can be applied to calculate the sentiment score for the whole dataset
+        # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
+        # float which lies in the range of [-1,1] where 1 means positive statement and -1 means a negative 
+        # statement. Subjective sentences generally refer to personal opinion, emotion or judgment whereas 
+        # objective refers to factual information. Subjectivity is also a float which lies in the range of [0,1].
+        def senti(x):
+            return TextBlob(x).sentiment  
+        df5['Sentiment_Score'] = df5['Comment'].apply(senti)
+
+        #Create separate columns for Polarity and Subjectivity Scores 
+        df5[['Polarity', 'Subjectivity']] = pd.DataFrame(df5['Sentiment_Score'].tolist(), index=df5.index) 
+
+        #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
+        df5 = df5.sort_values('Sentiment_Score')
+        top_5_negative = []
+        negative_index_list = list(df5.head(5).index)
+        for idx in negative_index_list:
+            top_5_negative.append(comment_list[idx].encode("ascii", "ignore").decode())
+        top_5_positive = []
+        positive_index_list = list(df5.tail(5).index)
+        for idx in positive_index_list:
+            top_5_positive.append(comment_list[idx].encode("ascii", "ignore").decode())
+        df6 = pd.DataFrame({'5 Most Negative Comments': top_5_negative, '5 Most Positive Comments': top_5_positive})
+        
+        # CSS to inject contained in a string
+        hide_table_row_index = """
+                    <style>
+                    tbody th {display:none}
+                    .blank {display:none}
+                    </style>
+                    """
+
+
+        # Inject CSS with Markdown
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+        # Display an interactive table
+        st.table(df6)
+
 
 
 
@@ -262,19 +339,6 @@ except:
 
 st.header("Snapchat has been tracking you.")
 try: 
-    # center on Liberty Bell
-    # m = folium.Map(location=[39.949610, -75.150282], zoom_start=16)
-
-    # # add marker for Liberty Bell
-    # tooltip = "Liberty Bell"
-    # folium.Marker(
-    #     [39.949610, -75.150282], popup="Liberty Bell", tooltip=tooltip
-    # ).add_to(m)
-
-    # # call to render Folium map in Streamlit
-    # folium_static(m)
-
-
 
     uploaded_files= st.file_uploader("Upload your Snapchat CSV data here", accept_multiple_files=True, key= 1)
     index = 0 
