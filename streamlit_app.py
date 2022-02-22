@@ -185,6 +185,10 @@ try:
                 post_comments_json = json.load(file[2])
             elif name.startswith("zipfile"):
                 zipfile = zipfile.ZipFile(file[2])
+                size = sum([zinfo.file_size for zinfo in zipfile.filelist])
+                total_file_size = round(float(size) / 1000000,2)  # total file size in mB
+
+
 
 
     # profile information
@@ -227,14 +231,25 @@ try:
         plt.ylabel('Number of Liked Posts')
         plt.show()
         st.pyplot(fig)
-        st.markdown("It looks like your 5 most liked posts are: {}, {}, {}, {}, {}".format(top_liked_accounts[0], top_liked_accounts[1], top_liked_accounts[2], top_liked_accounts[3], top_liked_accounts[4]))
+        st.markdown("It looks like your 5 most liked posters are: {}, {}, {}, {}, {}".format(top_liked_accounts[0], top_liked_accounts[1], top_liked_accounts[2], top_liked_accounts[3], top_liked_accounts[4]))
 
     with row3_2, _lock: 
         data = {'Category':['Username', 'Phone Number', 'Email', 'Gender', 'Primary Account Location'],
                 'Your Information':[user_name, phone_number, email, gender, primary_account_location]}
         df = pd.DataFrame(data)
-        df = df.style.set_properties(**{'text-align': 'left'})
-        df
+           
+        # CSS to inject contained in a string
+        hide_table_row_index = """
+                    <style>
+                    tbody th {display:none}
+                    .blank {display:none}
+                    </style>
+                    """
+        # Inject CSS with Markdown
+        st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+        # Display an interactive table
+        st.table(df)
 
     line1_spacer1, line1_1, line1_spacer2 = st.columns((.1, 3.2, .1))
     with line1_1:
@@ -246,10 +261,6 @@ try:
 
 
     with row4, _lock: 
-        total_file_size = 0 
-        for file in sorted_files: 
-            total_file_size += len(file[3])
-        total_file_size = total_file_size * (0.000001)
         num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
         st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
 
