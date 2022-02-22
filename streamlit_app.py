@@ -40,9 +40,6 @@ VERSION = '20220208'
 LIMIT = 100
 
 
-
-st.header("testing testing")
-
 # google extract inferences code
 def extract_inference(ad):
     #extract_tags
