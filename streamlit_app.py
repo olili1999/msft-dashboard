@@ -29,6 +29,9 @@ from nltk.corpus import stopwords
 from textblob import TextBlob
 
 
+import zipfile
+
+
 
 
 CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' # your Foursquare ID
@@ -153,9 +156,10 @@ def extract_inference(ad):
 
 
 st.title('Your Social Media Data Dashboard')
+st.caption("NOTE: None of your personal data you upload to this dashboard will be saved by this research team.")
 st.header("Instagram Data Dashboard")
 try: 
-    uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, and personal.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
+    uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, personal.json, and post_comments.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
 
     sorted_files = []
     index = 0 
@@ -179,6 +183,9 @@ try:
                 personal_information_json = json.load(file[2])
             elif name.startswith("post_comments"): 
                 post_comments_json = json.load(file[2])
+            elif name.startswith("zipfile"):
+                zipfile = zipfile.ZipFile(file[2])
+
 
     # profile information
     user_name = personal_information_json['profile_user'][0]['string_map_data']['Username']['value']
