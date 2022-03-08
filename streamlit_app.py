@@ -253,6 +253,8 @@ try:
     st.write('')
     row4_space1, row4, row4_space2 = st.columns((0.1, 1, 0.1))
 
+
+    print("checkpoint0")
     with row4, _lock: 
         # Get all Instagram comments into one list
         comment_list = []
@@ -261,7 +263,9 @@ try:
             comment_list.append(list_of_dic[index]['string_list_data'][0]['value'])
         # print(comment_list)
         #Read comments to a dataframe
+
         df5 = pd.DataFrame(comment_list, columns = ['Comment'])
+        print(df5)
         #Function to remove non-ASCII from comments 
         def remove_non_ascii(text): 
             return ''.join(i for i in text if ord(i)<128) 
@@ -269,8 +273,7 @@ try:
         #Create stopword list
         stopwords = set(stopwords.words('english'))
         stopwords.update(["u", "n", "i'm", "r"])
-
-        st.write("checkpoint1")
+        print("checkpoint1")
         #Data preprocessing
         df5['Comment'] = df5['Comment'].astype(str)
         df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
