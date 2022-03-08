@@ -330,8 +330,8 @@ try:
 
 
 
-# except: 
-#     st.error("You need to upload more files. Make sure there are no duplicates")
+except: 
+    st.error("You need to upload more files. Make sure there are no duplicates")
 
 
 
