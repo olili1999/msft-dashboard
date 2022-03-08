@@ -254,7 +254,6 @@ try:
     row4_space1, row4, row4_space2 = st.columns((0.1, 1, 0.1))
 
 
-    print("checkpoint0")
     with row4, _lock: 
         # Get all Instagram comments into one list
         comment_list = []
@@ -273,9 +272,6 @@ try:
         df5['Comment'] = df5['Comment'].astype(str)
         df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
         df5['Comment'] = df5['Comment'].str.replace(r'[^\w\s]+', '')
-        df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
-
-
         st.write(df5)
         # # Define a function which can be applied to calculate the sentiment score for the whole dataset
         # # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
@@ -291,7 +287,6 @@ try:
 
         # #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
         # df5 = df5.sort_values('Sentiment_Score')
-        # st.write("checkpoint2")
         # top_5_negative = []
         # negative_index_list = list(df5.head(5).index)
         # for idx in negative_index_list:
