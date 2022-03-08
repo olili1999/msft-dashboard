@@ -248,25 +248,12 @@ try:
         # Display an interactive table
         st.table(df)
 
-    line1_spacer1, line1_1, line1_spacer2 = st.columns((.1, 3.2, .1))
-    with line1_1:
-        st.header('Total Data Collected')
+
 
     st.write('')
-    row4_space1, row4, row4_space4 = st.columns(
-        (.1, 1, .1))
-
+    row4_space1, row4, row4_space2 = st.columns((0.1, 1, 0.1))
 
     with row4, _lock: 
-        num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
-        st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
-
-
-
-    st.write('')
-    row5_space1, row5, row5_space2 = st.columns((0.1, 1, 0.1))
-
-    with row5, _lock: 
         # Get all Instagram comments into one list
         comment_list = []
         list_of_dic = post_comments_json['comments_media_comments']
@@ -326,6 +313,19 @@ try:
 
         # Display an interactive table
         st.table(df6)
+
+    line1_spacer1, line1_1, line1_spacer2 = st.columns((.1, 3.2, .1))
+    with line1_1:
+        st.header('Total Data Collected')
+
+    st.write('')
+    row5_space1, row5, row5_space5 = st.columns(
+        (.1, 1, .1))
+
+
+    with row5, _lock: 
+        num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
+        st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
 
 
 
