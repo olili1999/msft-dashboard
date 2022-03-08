@@ -265,7 +265,6 @@ try:
         #Read comments to a dataframe
 
         df5 = pd.DataFrame(comment_list, columns = ['Comment'])
-        st.write(df5)
         #Function to remove non-ASCII from comments 
         def remove_non_ascii(text): 
             return ''.join(i for i in text if ord(i)<128) 
@@ -276,6 +275,8 @@ try:
         df5['Comment'] = df5['Comment'].str.replace(r'[^\w\s]+', '')
         df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
 
+
+        st.write(df5)
         # # Define a function which can be applied to calculate the sentiment score for the whole dataset
         # # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
         # # float which lies in the range of [-1,1] where 1 means positive statement and -1 means a negative 
