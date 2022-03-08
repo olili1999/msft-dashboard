@@ -318,20 +318,20 @@ try:
     with line1_1:
         st.header('Total Data Collected')
 
-    st.write('')
-    row5_space1, row5, row5_space5 = st.columns(
-        (.1, 1, .1))
+    # st.write('')
+    # row5_space1, row5, row5_space5 = st.columns(
+    #     (.1, 1, .1))
 
 
-    with row5, _lock: 
-        num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
-        st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
+    # with row5, _lock: 
+    #     num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
+    #     st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
 
 
 
 
-except: 
-    st.error("You need to upload more files. Make sure there are no duplicates")
+# except: 
+#     st.error("You need to upload more files. Make sure there are no duplicates")
 
 
 
