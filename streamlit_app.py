@@ -269,6 +269,8 @@ try:
         #Create stopword list
         stopwords = set(stopwords.words('english'))
         stopwords.update(["u", "n", "i'm", "r"])
+
+        st.write("checkpoint1")
         #Data preprocessing
         df5['Comment'] = df5['Comment'].astype(str)
         df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
@@ -289,6 +291,7 @@ try:
 
         #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
         df5 = df5.sort_values('Sentiment_Score')
+        st.write("checkpoint2")
         top_5_negative = []
         negative_index_list = list(df5.head(5).index)
         for idx in negative_index_list:
@@ -326,8 +329,6 @@ try:
     # with row5, _lock: 
     #     num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
     #     st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
-
-
 
 
 except: 
