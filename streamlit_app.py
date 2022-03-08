@@ -265,45 +265,42 @@ try:
         #Read comments to a dataframe
 
         df5 = pd.DataFrame(comment_list, columns = ['Comment'])
-        print(df5)
-        #Function to remove non-ASCII from comments 
-        def remove_non_ascii(text): 
-            return ''.join(i for i in text if ord(i)<128) 
-        df5['Comment'] = df5['Comment'].apply(remove_non_ascii) 
-        #Create stopword list
-        stopwords = set(stopwords.words('english'))
-        stopwords.update(["u", "n", "i'm", "r"])
-        print("checkpoint1")
-        #Data preprocessing
-        df5['Comment'] = df5['Comment'].astype(str)
-        df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
-        df5['Comment'] = df5['Comment'].str.replace(r'[^\w\s]+', '')
-        df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
+        st.write(df5)
+        # #Function to remove non-ASCII from comments 
+        # def remove_non_ascii(text): 
+        #     return ''.join(i for i in text if ord(i)<128) 
+        # df5['Comment'] = df5['Comment'].apply(remove_non_ascii) 
+        # #Create stopword list
+        # #Data preprocessing
+        # df5['Comment'] = df5['Comment'].astype(str)
+        # df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
+        # df5['Comment'] = df5['Comment'].str.replace(r'[^\w\s]+', '')
+        # df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x for x in x.split() if x not in stopwords))
 
-        # Define a function which can be applied to calculate the sentiment score for the whole dataset
-        # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
-        # float which lies in the range of [-1,1] where 1 means positive statement and -1 means a negative 
-        # statement. Subjective sentences generally refer to personal opinion, emotion or judgment whereas 
-        # objective refers to factual information. Subjectivity is also a float which lies in the range of [0,1].
-        def senti(x):
-            return TextBlob(x).sentiment  
-        df5['Sentiment_Score'] = df5['Comment'].apply(senti)
+        # # Define a function which can be applied to calculate the sentiment score for the whole dataset
+        # # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
+        # # float which lies in the range of [-1,1] where 1 means positive statement and -1 means a negative 
+        # # statement. Subjective sentences generally refer to personal opinion, emotion or judgment whereas 
+        # # objective refers to factual information. Subjectivity is also a float which lies in the range of [0,1].
+        # def senti(x):
+        #     return TextBlob(x).sentiment  
+        # df5['Sentiment_Score'] = df5['Comment'].apply(senti)
 
-        #Create separate columns for Polarity and Subjectivity Scores 
-        df5[['Polarity', 'Subjectivity']] = pd.DataFrame(df5['Sentiment_Score'].tolist(), index=df5.index) 
+        # #Create separate columns for Polarity and Subjectivity Scores 
+        # df5[['Polarity', 'Subjectivity']] = pd.DataFrame(df5['Sentiment_Score'].tolist(), index=df5.index) 
 
-        #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
-        df5 = df5.sort_values('Sentiment_Score')
-        st.write("checkpoint2")
-        top_5_negative = []
-        negative_index_list = list(df5.head(5).index)
-        for idx in negative_index_list:
-            top_5_negative.append(comment_list[idx].encode("ascii", "ignore").decode())
-        top_5_positive = []
-        positive_index_list = list(df5.tail(5).index)
-        for idx in positive_index_list:
-            top_5_positive.append(comment_list[idx].encode("ascii", "ignore").decode())
-        df6 = pd.DataFrame({'5 Most Negative Comments': top_5_negative, '5 Most Positive Comments': top_5_positive})
+        # #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
+        # df5 = df5.sort_values('Sentiment_Score')
+        # st.write("checkpoint2")
+        # top_5_negative = []
+        # negative_index_list = list(df5.head(5).index)
+        # for idx in negative_index_list:
+        #     top_5_negative.append(comment_list[idx].encode("ascii", "ignore").decode())
+        # top_5_positive = []
+        # positive_index_list = list(df5.tail(5).index)
+        # for idx in positive_index_list:
+        #     top_5_positive.append(comment_list[idx].encode("ascii", "ignore").decode())
+        # df6 = pd.DataFrame({'5 Most Negative Comments': top_5_negative, '5 Most Positive Comments': top_5_positive})
         
         # CSS to inject contained in a string
         hide_table_row_index = """
