@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(layout="wide")
 import pandas as pd
 import numpy as np
 import json
@@ -249,17 +250,6 @@ try:
         data = {'Category':['Username', 'Phone Number', 'Email', 'Gender', 'Primary Account Location'],
                 'Your Information':[user_name, phone_number, email, gender, primary_account_location]}
         df = pd.DataFrame(data)
-           
-        # CSS to inject contained in a string
-        hide_table_row_index = """
-                    <style>
-                    tbody th {display:none}
-                    .blank {display:none}
-                    </style>
-                    """
-        # Inject CSS with Markdown
-        st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
         # Display an interactive table
         st.table(df)
 
@@ -371,15 +361,15 @@ try:
         string_data = stringio.read()
         st.write(extract_inference(string_data))
 except:     
-    st.error("Uploaded file of incorrect type. Make sure it is the HTML file specified in the YouTube video.")
+    st.error("Error! You may have uploaded a file of incorrect type, or the incorrect file altogether. Make sure it is the HTML file specified in the YouTube video.")
 
 
 
-st.header("Snapchat has been tracking you.")
+st.header("Snapchat Has Been Tracking You")
 st.caption("We have created a series of different maps, visualizations, and tools to track your location history below. Each one has a slightly different functionality.")
 st.caption("NOTE: Some visualizations may take a few minutes or even more to load.")
 try: 
-    uploaded_files= st.file_uploader("Upload your Snapchat CSV data here", accept_multiple_files=True, key= 1)
+    uploaded_files= st.file_uploader("Upload your Snapchat location_history.JSON file here", accept_multiple_files=True, key= 1)
     # for uploaded_file in uploaded_files:
     #     # To convert to a string based IO:
     #     location = json.load(uploaded_file)
@@ -387,6 +377,10 @@ try:
     for uploaded_file in uploaded_files:
         # To convert to a string based IO:
         location = json.load(uploaded_file)
+
+
+   
+
 
     areas_visited = location['Location History']
 
@@ -407,6 +401,8 @@ try:
 
 
 
+
+
     # # -------------------------------------------------------------------------------- #
                 ##     # BEGIN WHERE SNAPCHAT BELIEVES YOU HAVE BEEN CODE  ## 
     # # -------------------------------------------------------------------------------- #
@@ -419,12 +415,20 @@ try:
         l_list.append([businesses[j]['Date'], businesses[j]['Name']])
 
     business_df = pd.DataFrame (l_list, columns = ['Date', 'Name'])
-    st.table(business_df)
 
 
-    # # -------------------------------------------------------------------------------- #
-                ##     # BEGIN WHERE SNAPCHAT BELIEVES YOU HAVE BEEN CODE  ## 
-    # # -------------------------------------------------------------------------------- #
+    _lock = RendererAgg.lock
+
+
+    _, row1_1, _, row1_2, _ = st.columns((0.1, 1,0.1, 1, 0.1))
+
+    _, row2, _ = st.columns((0.1, 1,0.1))
+    _, row3, _ = st.columns((0.1, 1,0.1))
+    _, row4_1, _, row4_2, _ = st.columns((0.01, 1,0.1, 1, 0.01))
+
+    with row1_1, _lock: 
+        st.table(business_df)
+
     home_and_work = location['Home & Work']
 
     work_home_df = pd.DataFrame(list(home_and_work.items()),columns = ['Home','Work']) 
@@ -451,73 +455,75 @@ try:
     home_location = geolocator.geocode(home_Latitude+","+home_Longitude)
     work_location = geolocator.geocode(work_Latitude+","+work_Longitude)
 
-    st.subheader("Snapchat believes your location is " + str(home_location))
-    st.subheader("Snapchat believes your location is " + str(work_location))
+    with row1_2, _lock: 
+        st.subheader("Snapchat believes your home location is " + str(home_location))
+        st.subheader("Snapchat believes your work location is " + str(work_location))
+
+
 
     # # # -------------------------------------------------------------------------------- #
     #             ## BEGIN TIMELAPSE MAP CODE ## 
     # # # -------------------------------------------------------------------------------- #
+    
+    with row2, _lock: 
+        selected_columns = location_df[["Time", "lat", "long"]]
+        timelapse_df = selected_columns.copy()
+        #timelapse_df
+        lat_long_list = []
+        for i in timelapse_df['Time'].unique():
+            temp=[]
+            for index, instance in timelapse_df[timelapse_df['Time'] == i].iterrows():
+                temp.append([instance['lat'],instance['long']])
+            lat_long_list.append(temp)
+            
+        #converting it to datetime format
+        timelapse_df['Time']= pd.to_datetime(timelapse_df['Time'])
+        #creating a time index
+        time_index = []
+        for i in timelapse_df['Time'].unique():
+            time_index.append(i)
+        #formatting the index
+        date_strings = [d.strftime('%d/%m/%Y, %H:%M:%S') for d in time_index]
 
 
-    selected_columns = location_df[["Time", "lat", "long"]]
-    timelapse_df = selected_columns.copy()
-    #timelapse_df
-    lat_long_list = []
-    for i in timelapse_df['Time'].unique():
-        temp=[]
-        for index, instance in timelapse_df[timelapse_df['Time'] == i].iterrows():
-            temp.append([instance['lat'],instance['long']])
-        lat_long_list.append(temp)
-        
-    #converting it to datetime format
-    timelapse_df['Time']= pd.to_datetime(timelapse_df['Time'])
-    #creating a time index
-    time_index = []
-    for i in timelapse_df['Time'].unique():
-        time_index.append(i)
-    #formatting the index
-    date_strings = [d.strftime('%d/%m/%Y, %H:%M:%S') for d in time_index]
-
-
-    #Choosing the map type 
-    timelapse_map = folium.Map(location=[42.2808, -83.7430],zoom_start = 5, tiles="openstreetmap",attr="Stadia.AlidadeSmoothDark")
-    #Plot it on the map
-    HeatMapWithTime(lat_long_list,radius=10,auto_play=True,position='bottomright',name="cluster",index=date_strings,max_opacity=0.7).add_to(timelapse_map)
-    # Display the map
-    # Adds tool to the top right
-    from folium.plugins import MeasureControl
-    timelapse_map.add_child(MeasureControl())
-    st.subheader("Here's a timelapse of your location history")
-    st.caption("Below you can see every day of location history Snapchat has tracked about you")
-    folium_static(timelapse_map)
+        #Choosing the map type 
+        timelapse_map = folium.Map(location=[42.2808, -83.7430],zoom_start = 5, tiles="openstreetmap",attr="Stadia.AlidadeSmoothDark")
+        #Plot it on the map
+        HeatMapWithTime(lat_long_list,radius=10,auto_play=True,position='bottomright',name="cluster",index=date_strings,max_opacity=0.7).add_to(timelapse_map)
+        # Display the map
+        # Adds tool to the top right
+        from folium.plugins import MeasureControl
+        timelapse_map.add_child(MeasureControl())
+        st.subheader("Here's a timelapse of your location history")
+        st.caption("Below you can see every day of location history Snapchat has tracked about you")
+        folium_static(timelapse_map, width = 1500)
 
     # # # -------------------------------------------------------------------------------- #
     #             ## BEGIN CLUSTER MAP ## 
     # # # -------------------------------------------------------------------------------- #
 
+    with row3, _lock: 
+        st.subheader("Here's a cluster map of your activity")
+        st.caption("By zooming in and out, the number of locations will change. Based upon this, Snapchat can infer your most common locations.")
+        # Create the map
+        cluster_map = folium.Map(location=[42.2808, -83.7430], tiles='openstreetmap', zoom_start=5)
+        # Add points to the map
+        mc = MarkerCluster()
+        for idx, row in location_df.iterrows():
+            if not math.isnan(row['long']) and not math.isnan(row['lat']):
+                mc.add_child(Marker([row['lat'], row['long']]))
+        cluster_map.add_child(mc)
 
-    st.subheader("Here's a cluster map of your activity")
-    st.caption("By zooming in and out, the number of locations will change. Based upon this, Snapchat can infer your most common locations.")
-    # Create the map
-    cluster_map = folium.Map(location=[42.2808, -83.7430], tiles='openstreetmap', zoom_start=5)
-    # Add points to the map
-    mc = MarkerCluster()
-    for idx, row in location_df.iterrows():
-        if not math.isnan(row['long']) and not math.isnan(row['lat']):
-            mc.add_child(Marker([row['lat'], row['long']]))
-    cluster_map.add_child(mc)
-
-    # Adds tool to the top right
-    from folium.plugins import MeasureControl
-    cluster_map.add_child(MeasureControl())
-    # Display the map
-    folium_static(cluster_map)
+        # Adds tool to the top right
+        from folium.plugins import MeasureControl
+        cluster_map.add_child(MeasureControl())
+        # Display the map
+        folium_static(cluster_map, width = 1500)
 
 
     # # -------------------------------------------------------------------------------- #
                 ## BEGIN FOURSQUARE NO QUERY CODE ## 
     # # -------------------------------------------------------------------------------- #
-
     CLIENT_ID = 'PDLBYPAUCNCTOCDJ0MHINYM5X2MM5QLJUNBVV2JUNQPKWYPW' # your Foursquare ID
     CLIENT_SECRET = 'FEI04Q3MFOROEJWTFW20V0ZOFVYOLLXZIZUJCLR1R2TCL3TU' # your Foursquare Secret
     VERSION = '20180604'
@@ -570,29 +576,34 @@ try:
         ).add_to(foursquare_map_no_query)
 
 
-    st.subheader("We've identified these as 5 nearby locations of interest for you")
-    st.caption('Red dots represent each visited locations and Blue dots represent surrounding popular venues')
-
-    folium_static(foursquare_map_no_query)
-    
+  
 
     # Adds tool to the top right
     from folium.plugins import MeasureControl
     foursquare_map_no_query.add_child(MeasureControl())
     concat_df = concat_df[['name', 'distance']]
-
     concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (meters)"})
     concat_df["Distance (miles)"] = concat_df["Distance (meters)"] / 1000 * 0.621371
     concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True)
     concat_df = concat_df.drop_duplicates(subset='Location Name Near You', keep="last")
     concat_df = concat_df[["Location Name Near You", "Distance (miles)"]]
-    st.table(concat_df)
+
+      
+    with row4_1, _lock:
+        st.subheader("We've identified this list of nearby locations of interest for you")
+        st.caption('Red dots represent each visited locations and Blue dots represent surrounding popular venues')
+        folium_static(foursquare_map_no_query)
+
+    with row4_2, _lock: 
+        st.subheader("This is a list of locations near you")
+        st.caption('These are all locations of interest in the map to the left near you in ascending order of proximity')
+        st.table(concat_df)
 
 
 
 
 except:     
-    st.error("Make sure you uploaded your personal Snapchat media CSV here.")
+    st.error("Error! You may have uploaded a file of incorrect type, or the incorrect file altogether. Make sure it is the JSON file specified in the YouTube video.")
 
 
 
