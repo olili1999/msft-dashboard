@@ -24,6 +24,7 @@ import string
 from pandas.io.json import json_normalize
 from geopy.geocoders import Nominatim 
 import requests
+import math
 
 
 import nltk
@@ -167,6 +168,8 @@ def extract_inference(ad):
 st.title('Your Social Media Data Dashboard')
 st.caption("NOTE: None of your personal data you upload to this dashboard will be saved by this research team.")
 st.header("Instagram Data Dashboard")
+st.caption("We've created an insights dashboard just using the information Instagram tracks about you.")
+
 try: 
     uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, personal.json, and post_comments.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
 
@@ -339,14 +342,14 @@ try:
     with line1_1:
         st.header('Total Data Collected')
 
-    # st.write('')
-    # row5_space1, row5, row5_space5 = st.columns(
-    #     (.1, 1, .1))
+    st.write('')
+    row5_space1, row5, row5_space5 = st.columns(
+        (.1, 1, .1))
 
 
-    # with row5, _lock: 
-    #     num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
-    #     st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
+    with row5, _lock: 
+        num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
+        st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
 
 
 except: 
@@ -355,6 +358,7 @@ except:
 
 
 st.header("What Google Knows About You")
+st.caption("From your internet usage, we compiled a paragraph that describes the main insights Google was able to infer about you.")
 try: 
     uploaded_files= st.file_uploader("Upload your Google Ad Settings HTML for a paragraph about you from Google Ad Settings", accept_multiple_files=True, key= 1)
     index = 0 
@@ -372,6 +376,7 @@ except:
 
 
 st.header("Snapchat has been tracking you.")
+st.caption("We have created a series of different maps, visualizations, and tools to track your location history below. Each one has a slightly different functionality.")
 try: 
     uploaded_files= st.file_uploader("Upload your Snapchat CSV data here", accept_multiple_files=True, key= 1)
     # for uploaded_file in uploaded_files:
@@ -457,9 +462,6 @@ try:
     date_strings = [d.strftime('%d/%m/%Y, %H:%M:%S') for d in time_index]
 
 
-
-
-
     #Choosing the map type 
     timelapse_map = folium.Map(location=[42.2808, -83.7430],zoom_start = 5, tiles="openstreetmap",attr="Stadia.AlidadeSmoothDark")
     #Plot it on the map
@@ -468,7 +470,33 @@ try:
     # Adds tool to the top right
     from folium.plugins import MeasureControl
     timelapse_map.add_child(MeasureControl())
+    st.subheader("Here's a timelapse of your location history")
+    st.caption("Below you can see every day of location history Snapchat has tracked about you")
     folium_static(timelapse_map)
+
+
+
+    # # # -------------------------------------------------------------------------------- #
+    #             ## BEGIN CLUSTER MAP ## 
+    # # # -------------------------------------------------------------------------------- #
+
+
+    st.subheader("Here's a cluster map of your activity")
+    st.caption("By zooming in and out, the number of locations will change. Based upon this, Snapchat can infer your most common locations.")
+    # Create the map
+    cluster_map = folium.Map(location=[42.2808, -83.7430], tiles='openstreetmap', zoom_start=5)
+    # Add points to the map
+    mc = MarkerCluster()
+    for idx, row in location_df.iterrows():
+        if not math.isnan(row['long']) and not math.isnan(row['lat']):
+            mc.add_child(Marker([row['lat'], row['long']]))
+    cluster_map.add_child(mc)
+
+    # Adds tool to the top right
+    from folium.plugins import MeasureControl
+    cluster_map.add_child(MeasureControl())
+    # Display the map
+    folium_static(cluster_map)
 
 
     # # -------------------------------------------------------------------------------- #
@@ -526,6 +554,8 @@ try:
             fill_opacity=0.6
         ).add_to(foursquare_map_no_query)
 
+
+    st.subheader("We've identified these as 5 nearby locations of interest for you")
     folium_static(foursquare_map_no_query)
     
     # Adds tool to the top right
@@ -543,6 +573,8 @@ try:
                 ## BEGIN FOURSQUARE USER QUERY CODE ## 
     # # -------------------------------------------------------------------------------- #
 
+    st.subheader("Search Points of Interest Near Your Location History")
+    st.caption("Snapchat has all your location history. This tool could theoretically be used to find locations people go to on a regular basis by searching key phrases about them. For instance, if we know that someone likes Chinese Food, we can search 'Chinese' to find restaurants they may go to on a regular basis. ")
     user_input = st.text_input('Search Points of Interest')
     concat_df2 = pd.DataFrame()
     for index, row in nndf.iterrows():
@@ -585,8 +617,27 @@ try:
             fill_color='blue',
             fill_opacity=0.6
         ).add_to(foursquare_map_with_query)
-        
+
     folium_static(foursquare_map_with_query)
+    
+    concat_df2 = concat_df2[['name', 'distance']]
+    concat_df2 = concat_df2.rename(columns = {"name": "Location Name Near You", "distance": "Distance (miles)"})
+    concat_df2["Distance (km)"] = concat_df2["Distance (miles)"] / 1000 * 0.621371
+    # Take top 5 closest POI's
+    concat_df2 = concat_df2.sort_values(by = "Distance (miles)", ascending = True).head(5)
+    st.table(concat_df2)
+    st.caption("These are the locations that your search query came up with!")
+
+
+
+    # # -------------------------------------------------------------------------------- #
+                ##     # BEGIN POPULAR VENUES AT EACH LOCATION CODE ## 
+    # # -------------------------------------------------------------------------------- #
+
+    st.subheader("Popular Venues at Each Location You've Been At")
+     # # -------------------------------------------------------------------------------- #
+                ##     # TODO ## 
+    # # -------------------------------------------------------------------------------- #
 
 
 
