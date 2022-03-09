@@ -377,6 +377,7 @@ except:
 
 st.header("Snapchat has been tracking you.")
 st.caption("We have created a series of different maps, visualizations, and tools to track your location history below. Each one has a slightly different functionality.")
+st.caption("NOTE: Some visualizations may take a few minutes or even more to load.")
 try: 
     uploaded_files= st.file_uploader("Upload your Snapchat CSV data here", accept_multiple_files=True, key= 1)
     # for uploaded_file in uploaded_files:
@@ -385,61 +386,77 @@ try:
 
     for uploaded_file in uploaded_files:
         # To convert to a string based IO:
-        location_df = pd.read_csv(uploaded_file)
+        location = json.load(uploaded_file)
 
+    areas_visited = location['Location History']
 
+    location_list = list()
 
-    # ### BEGIN DATA CLEANING ### 
-    # areas_visited = location['Areas you may have visited in the last two years']
-    # location_list = list()
+    for j in range(len(areas_visited)):
+        location_list.append([areas_visited[j]['Time'], areas_visited[j]['Latitude, Longitude']])
 
-    # for j in range(len(areas_visited)):
-    #     location_list.append([areas_visited[j]['Time'], areas_visited[j]['City'], areas_visited[j]['Region'], areas_visited[j]['Postal Code']])
+    location_df = pd.DataFrame (location_list, columns = ['Time', 'Latitude, Longitude'])
 
-    # location_df = pd.DataFrame(location_list, columns = ['Time', 'City','Region', 'Postal Code'])
+    location_df[['Latitude_old', 'Longitude_old']] = location_df['Latitude, Longitude'].str.split(',', expand=True)
+    location_df[['lat', 'Lat_throw']] = location_df['Latitude_old'].str.split('±', expand=True)
+    location_df[['long', 'Long_throw']] = location_df['Longitude_old'].str.split('±', expand=True)
+    location_df = location_df.drop(['Latitude_old', 'Longitude_old', 'Latitude, Longitude', 'Lat_throw', 'Long_throw'], axis=1)
 
-    # location_df['loc'] = location_df['City'] + ', ' + location_df['Region']
+    location_df['lat'] = pd.to_numeric(location_df['lat'])
+    location_df['long'] = pd.to_numeric(location_df['long'])
 
-
-
-
-    # geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
-    # location = geolocator.geocode('4550 galloway, Ohio')
-
-
-    # def loc_convert_lat(x):
-    #     geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
-    #     location = geolocator.geocode(x)
-    #     return location.latitude
-
-    # def loc_convert_lang(x):
-    #     geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
-    #     location = geolocator.geocode(x)
-    #     return location.longitude
-
-    # def loc_convert_address(x):
-    #     geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
-    #     location = geolocator.geocode(x)
-    #     return location
-
-
-
-    # location_df['address'] = location_df['loc'].apply(loc_convert_address)
-    # location_df['lat'] = location_df['loc'].apply(loc_convert_lat)
-    # location_df['long'] = location_df['loc'].apply(loc_convert_lang)
-
-    # st.write(location_df)
 
 
     # # -------------------------------------------------------------------------------- #
-                ## GET RID OF THIS TO ADD BACK PARSING## 
+                ##     # BEGIN WHERE SNAPCHAT BELIEVES YOU HAVE BEEN CODE  ## 
     # # -------------------------------------------------------------------------------- #
 
-    location_df = location_df.rename(columns = {"Date": "Time"})
+    st.subheader("Where Snapchat Believes You've Been")
+    businesses = location['Businesses and public places you may have visited']
+    l_list = list()
+
+    for j in range(len(businesses)):
+        l_list.append([businesses[j]['Date'], businesses[j]['Name']])
+
+    business_df = pd.DataFrame (l_list, columns = ['Date', 'Name'])
+    st.table(business_df)
+
 
     # # -------------------------------------------------------------------------------- #
-                ## BEGIN TIMELAPSE MAP CODE ## 
+                ##     # BEGIN WHERE SNAPCHAT BELIEVES YOU HAVE BEEN CODE  ## 
     # # -------------------------------------------------------------------------------- #
+    home_and_work = location['Home & Work']
+
+    work_home_df = pd.DataFrame(list(home_and_work.items()),columns = ['Home','Work']) 
+    work_home_df[['Latitude_old', 'Longitude_old']] = work_home_df['Work'].str.split(',', expand=True)
+    work_home_df[['lat', 'Lat_throw']] = work_home_df['Latitude_old'].str.split('±', expand=True)
+    work_home_df[['long', 'Long_throw']] = work_home_df['Longitude_old'].str.split('±', expand=True)
+    work_home_df = work_home_df.drop(['Latitude_old', 'Longitude_old', 'Work', 'Lat_throw', 'Long_throw'], axis=1)
+    work_home_df['lat'] = pd.to_numeric(location_df['lat'])
+    work_home_df['long'] = pd.to_numeric(location_df['long'])
+    work_home_df = work_home_df.rename(columns={"Home": "Inferred Location"})
+
+        
+    # Initialize Nominatim API
+    geolocator = Nominatim(user_agent="geoapiExercises")
+
+    # Assign Latitude & Longitude
+    home_Latitude = work_home_df.iat[0,1].astype(str)
+    home_Longitude = work_home_df.iat[0,2].astype(str)
+    work_Latitude = work_home_df.iat[1,1].astype(str)
+    work_Longitude = work_home_df.iat[1,2].astype(str)
+
+
+    # Get location with geocode
+    home_location = geolocator.geocode(home_Latitude+","+home_Longitude)
+    work_location = geolocator.geocode(work_Latitude+","+work_Longitude)
+
+    st.subheader("Snapchat believes your location is " + str(home_location))
+    st.subheader("Snapchat believes your location is " + str(work_location))
+
+    # # # -------------------------------------------------------------------------------- #
+    #             ## BEGIN TIMELAPSE MAP CODE ## 
+    # # # -------------------------------------------------------------------------------- #
 
 
     selected_columns = location_df[["Time", "lat", "long"]]
@@ -474,8 +491,6 @@ try:
     st.caption("Below you can see every day of location history Snapchat has tracked about you")
     folium_static(timelapse_map)
 
-
-
     # # # -------------------------------------------------------------------------------- #
     #             ## BEGIN CLUSTER MAP ## 
     # # # -------------------------------------------------------------------------------- #
@@ -509,9 +524,8 @@ try:
     LIMIT = 100
 
 
-    ndf = location_df[['loc','lat','long']]
-    nndf = ndf.drop_duplicates()
-    nndf["long_lat"] = list(zip(nndf["lat"], nndf["long"]))
+    ndf = location_df[['lat','long']]
+    nndf = ndf.drop_duplicates(subset=['long', 'lat'])
 
     concat_df = pd.DataFrame()
 
@@ -527,7 +541,8 @@ try:
         result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
     #     print(result_df)
         concat_df = concat_df.append(result_df)
-        
+    
+
         
     # -------------------------------------------------------------------------------- #
     foursquare_map_no_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
@@ -556,88 +571,22 @@ try:
 
 
     st.subheader("We've identified these as 5 nearby locations of interest for you")
+    st.caption('Red dots represent each visited locations and Blue dots represent surrounding popular venues')
+
     folium_static(foursquare_map_no_query)
     
+
     # Adds tool to the top right
     from folium.plugins import MeasureControl
     foursquare_map_no_query.add_child(MeasureControl())
     concat_df = concat_df[['name', 'distance']]
-    concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (miles)"})
-    concat_df["Distance (km)"] = concat_df["Distance (miles)"] / 1000 * 0.621371
-    # Take top 5 closest POI's
-    concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True).head(5)
+
+    concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (meters)"})
+    concat_df["Distance (miles)"] = concat_df["Distance (meters)"] / 1000 * 0.621371
+    concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True)
+    concat_df = concat_df.drop_duplicates(subset='Location Name Near You', keep="last")
+    concat_df = concat_df[["Location Name Near You", "Distance (miles)"]]
     st.table(concat_df)
-
-
-    # # -------------------------------------------------------------------------------- #
-                ## BEGIN FOURSQUARE USER QUERY CODE ## 
-    # # -------------------------------------------------------------------------------- #
-
-    st.subheader("Search Points of Interest Near Your Location History")
-    st.caption("Snapchat has all your location history. This tool could theoretically be used to find locations people go to on a regular basis by searching key phrases about them. For instance, if we know that someone likes Chinese Food, we can search 'Chinese' to find restaurants they may go to on a regular basis. ")
-    user_input = st.text_input('Search Points of Interest')
-    concat_df2 = pd.DataFrame()
-    for index, row in nndf.iterrows():
-        url = "https://api.foursquare.com/v3/places/search?query={}&ll={},{}&radius=50000&limit=5".format(user_input, row['lat'], row['long'])
-    #     print(url)
-        headers = {
-        "Accept": "application/json",
-        "Authorization": "fsq3chVTJib0Z11IA8qFisvs8p7dkOJ6ky0WEbGTZ9FQPqc="
-        }
-        result = requests.request("GET", url, headers=headers).json()
-        result_df = json_normalize(result['results'])
-        result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
-    #     print(result_df)
-        concat_df2 = concat_df2.append(result_df)
-        
-    concat_df2 = concat_df2.dropna(subset=['lat', 'long', 'name'])
-
-
-    # -------------------------------------------------------------------------------- #
-    foursquare_map_with_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
-    # add a red circle marker to represent each visited locations
-    for lat, long in zip(nndf.lat, nndf.long):
-        folium.features.CircleMarker(
-            [lat, long],
-            radius=10,
-            color='red',
-            #popup=label,
-            fill = True,
-            fill_color='red',
-            fill_opacity=0.6
-        ).add_to(foursquare_map_with_query)
-    # # add all venues as blue circle markers
-    for lat, long, label in zip(concat_df2.lat, concat_df2.long, concat_df2.name):
-        folium.features.CircleMarker(
-            [lat, long],
-            radius=5,
-            color='blue',
-            popup=label,
-            fill = True,
-            fill_color='blue',
-            fill_opacity=0.6
-        ).add_to(foursquare_map_with_query)
-
-    folium_static(foursquare_map_with_query)
-    
-    concat_df2 = concat_df2[['name', 'distance']]
-    concat_df2 = concat_df2.rename(columns = {"name": "Location Name Near You", "distance": "Distance (miles)"})
-    concat_df2["Distance (km)"] = concat_df2["Distance (miles)"] / 1000 * 0.621371
-    # Take top 5 closest POI's
-    concat_df2 = concat_df2.sort_values(by = "Distance (miles)", ascending = True).head(5)
-    st.table(concat_df2)
-    st.caption("These are the locations that your search query came up with!")
-
-
-
-    # # -------------------------------------------------------------------------------- #
-                ##     # BEGIN POPULAR VENUES AT EACH LOCATION CODE ## 
-    # # -------------------------------------------------------------------------------- #
-
-    st.subheader("Popular Venues at Each Location You've Been At")
-     # # -------------------------------------------------------------------------------- #
-                ##     # TODO ## 
-    # # -------------------------------------------------------------------------------- #
 
 
 
