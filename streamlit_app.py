@@ -15,9 +15,12 @@ from io import StringIO
 import random
 from streamlit_folium import folium_static
 import folium
+from folium import Choropleth, Circle, Marker
 import folium.plugins as plugins
-import geopandas as gpd
+from folium.plugins import HeatMap, MarkerCluster, HeatMapWithTime
 
+import geopandas as gpd
+import string
 from pandas.io.json import json_normalize
 from geopy.geocoders import Nominatim 
 import requests
@@ -34,10 +37,19 @@ import zipfile
 
 
 
-CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' # your Foursquare ID
-CLIENT_SECRET = 'CTHTUE1JSINGUNVXSDL0JGPO1CRKOE312RYYA21LEBKE5ZSA' # your Foursquare Secret
-VERSION = '20220208'
-LIMIT = 100
+
+
+# CSS to inject contained in a string
+hide_table_row_index = """
+            <style>
+            tbody th {display:none}
+            .blank {display:none}
+            </style>
+            """
+# Inject CSS with Markdown
+st.markdown(hide_table_row_index, unsafe_allow_html=True)
+
+
 
 
 # google extract inferences code
@@ -251,66 +263,77 @@ try:
 
 
     st.write('')
-    row4_space1, row4, row4_space2 = st.columns((0.1, 1, 0.1))
+    row4_space1, row4, row4_space2 = st.columns((0.01, 1, 0.01))
 
 
     with row4, _lock: 
         # Get all Instagram comments into one list
+        #Get all Instagram comments into one list
         comment_list = []
         list_of_dic = post_comments_json['comments_media_comments']
         for index in range(len(list_of_dic)):
             comment_list.append(list_of_dic[index]['string_list_data'][0]['value'])
-        # print(comment_list)
-        #Read comments to a dataframe
 
-        df5 = pd.DataFrame(comment_list, columns = ['Comment'])
+        long_comments = []
+        for comment in comment_list:
+            comment = comment.encode("ascii", "ignore").decode()
+            if len(comment) > 100:
+                long_comments.append(comment)
+
+        #Put longest comments in dataframe
+        st.subheader("All Comments 100 Characters or More")
+        df_long_comment = pd.DataFrame({'Your Long Comments': long_comments})
+        df_long_comment = df_long_comment.style.set_properties(**{'text-align': 'left'}).hide_index()
+
+    
+        # Display an interactive table
+        st.table(df_long_comment)
+        st.subheader("Your Most Polarizing Comments")
+        st.write("Sentiment is view of or attitude toward a situation or event; an opinion. The following table shows your top five negative and top five positive comments based on a sentiment analysis. Please note that the sentiment analyser can only analyze if the words in your comment have a positive or negative meaning. Not if you are using the words in a positive or negative way. Therefore, if you use words in ways other than their intended meanings, your comment selection may not be as 'negative' or 'positive' as expected.")
+        #Comment Sentiment Analysis 
+
+        #Read comments to a dataframe
+        df_sentiment_analysis = pd.DataFrame(comment_list, columns = ['Comment'])
+
         #Function to remove non-ASCII from comments 
         def remove_non_ascii(text): 
             return ''.join(i for i in text if ord(i)<128) 
-        df5['Comment'] = df5['Comment'].apply(remove_non_ascii) 
+        df_sentiment_analysis['Comment'] = df_sentiment_analysis['Comment'].apply(remove_non_ascii) 
+
+
         #Data preprocessing
-        df5['Comment'] = df5['Comment'].astype(str)
-        df5['Comment'] = df5['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
-        df5['Comment'] = df5['Comment'].str.replace(r'[^\w\s]+', '')
-        st.write(df5)
-        # # Define a function which can be applied to calculate the sentiment score for the whole dataset
-        # # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
-        # # float which lies in the range of [-1,1] where 1 means positive statement and -1 means a negative 
-        # # statement. Subjective sentences generally refer to personal opinion, emotion or judgment whereas 
-        # # objective refers to factual information. Subjectivity is also a float which lies in the range of [0,1].
-        # def senti(x):
-        #     return TextBlob(x).sentiment  
-        # df5['Sentiment_Score'] = df5['Comment'].apply(senti)
+        df_sentiment_analysis['Comment'] = df_sentiment_analysis['Comment'].astype(str)
+        df_sentiment_analysis['Comment'] = df_sentiment_analysis['Comment'].apply(lambda x: " ".join(x.lower() for x in x.split()))
+        df_sentiment_analysis['Comment'] = df_sentiment_analysis['Comment'].str.replace(r'[^\w\s]+', '')
 
-        # #Create separate columns for Polarity and Subjectivity Scores 
-        # df5[['Polarity', 'Subjectivity']] = pd.DataFrame(df5['Sentiment_Score'].tolist(), index=df5.index) 
+        # Define a function which can be applied to calculate the sentiment score for the whole dataset
+        # The sentiment function of textblob returns two properties, polarity, and subjectivity. Polarity is 
+        # float which lies in the range of [-1,1] where 1 means positive statement and -1 means a negative 
+        # statement. Subjective sentences generally refer to personal opinion, emotion or judgment whereas 
+        # objective refers to factual information. Subjectivity is also a float which lies in the range of [0,1].
+        mask = (df_sentiment_analysis['Comment'].str.len() >= 50)
+        df_sentiment_analysis = df_sentiment_analysis.loc[mask]
+        def senti(x):
+            return TextBlob(x).sentiment  
+        df_sentiment_analysis['Sentiment_Score'] = df_sentiment_analysis['Comment'].apply(senti)
 
-        # #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
-        # df5 = df5.sort_values('Sentiment_Score')
-        # top_5_negative = []
-        # negative_index_list = list(df5.head(5).index)
-        # for idx in negative_index_list:
-        #     top_5_negative.append(comment_list[idx].encode("ascii", "ignore").decode())
-        # top_5_positive = []
-        # positive_index_list = list(df5.tail(5).index)
-        # for idx in positive_index_list:
-        #     top_5_positive.append(comment_list[idx].encode("ascii", "ignore").decode())
-        # df6 = pd.DataFrame({'5 Most Negative Comments': top_5_negative, '5 Most Positive Comments': top_5_positive})
-        
-        # CSS to inject contained in a string
-        hide_table_row_index = """
-                    <style>
-                    tbody th {display:none}
-                    .blank {display:none}
-                    </style>
-                    """
+        #Create separate columns for Polarity and Subjectivity Scores 
+        df_sentiment_analysis[['Polarity', 'Subjectivity']] = pd.DataFrame(df_sentiment_analysis['Sentiment_Score'].tolist(), index=df_sentiment_analysis.index) 
 
-
-        # Inject CSS with Markdown
-        st.markdown(hide_table_row_index, unsafe_allow_html=True)
-
-        # Display an interactive table
-        st.table(df6)
+        #Rank comments by sentiment, and then list top 5 negative and top 5 positive comments in a dataframe
+        df_sentiment_analysis = df_sentiment_analysis.sort_values('Sentiment_Score')
+        top_5_negative = []
+        negative_index_list = list(df_sentiment_analysis.head(5).index)
+        for idx in negative_index_list:
+            top_5_negative.append(comment_list[idx].encode("ascii", "ignore").decode())
+        top_5_positive = []
+        positive_index_list = list(df_sentiment_analysis.tail(5).index)
+        for idx in positive_index_list:
+            top_5_positive.append(comment_list[idx].encode("ascii", "ignore").decode())
+        df_pos_neg_comments = pd.DataFrame({'5 Most Negative Comments': top_5_negative, '5 Most Positive Comments': top_5_positive})
+        pd.set_option('display.max_colwidth', None)
+        df_pos_neg_comments = df_pos_neg_comments.style.set_properties(**{'text-align': 'left'}).hide_index()
+        st.table(df_pos_neg_comments)
 
     line1_spacer1, line1_1, line1_spacer2 = st.columns((.1, 3.2, .1))
     with line1_1:
@@ -350,71 +373,122 @@ except:
 
 st.header("Snapchat has been tracking you.")
 try: 
-
     uploaded_files= st.file_uploader("Upload your Snapchat CSV data here", accept_multiple_files=True, key= 1)
-    index = 0 
+    # for uploaded_file in uploaded_files:
+    #     # To convert to a string based IO:
+    #     location = json.load(uploaded_file)
 
     for uploaded_file in uploaded_files:
         # To convert to a string based IO:
-        df = pd.read_csv(uploaded_file)
-    
+        location_df = pd.read_csv(uploaded_file)
 
+
+
+    # ### BEGIN DATA CLEANING ### 
+    # areas_visited = location['Areas you may have visited in the last two years']
+    # location_list = list()
+
+    # for j in range(len(areas_visited)):
+    #     location_list.append([areas_visited[j]['Time'], areas_visited[j]['City'], areas_visited[j]['Region'], areas_visited[j]['Postal Code']])
+
+    # location_df = pd.DataFrame(location_list, columns = ['Time', 'City','Region', 'Postal Code'])
+
+    # location_df['loc'] = location_df['City'] + ', ' + location_df['Region']
+
+
+
+
+    # geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
+    # location = geolocator.geocode('4550 galloway, Ohio')
+
+
+    # def loc_convert_lat(x):
+    #     geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
+    #     location = geolocator.geocode(x)
+    #     return location.latitude
+
+    # def loc_convert_lang(x):
+    #     geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
+    #     location = geolocator.geocode(x)
+    #     return location.longitude
+
+    # def loc_convert_address(x):
+    #     geolocator = Nominatim(timeout=10, user_agent = "myGeolocator")
+    #     location = geolocator.geocode(x)
+    #     return location
+
+
+
+    # location_df['address'] = location_df['loc'].apply(loc_convert_address)
+    # location_df['lat'] = location_df['loc'].apply(loc_convert_lat)
+    # location_df['long'] = location_df['loc'].apply(loc_convert_lang)
+
+    # st.write(location_df)
+
+
+    # # -------------------------------------------------------------------------------- #
+                ## GET RID OF THIS TO ADD BACK PARSING## 
+    # # -------------------------------------------------------------------------------- #
+
+    location_df = location_df.rename(columns = {"Date": "Time"})
+
+    # # -------------------------------------------------------------------------------- #
+                ## BEGIN TIMELAPSE MAP CODE ## 
+    # # -------------------------------------------------------------------------------- #
+
+
+    selected_columns = location_df[["Time", "lat", "long"]]
+    timelapse_df = selected_columns.copy()
+    #timelapse_df
     lat_long_list = []
-    for i in df['Date'].unique():
+    for i in timelapse_df['Time'].unique():
         temp=[]
-        for index, instance in df[df['Date'] == i].iterrows():
+        for index, instance in timelapse_df[timelapse_df['Time'] == i].iterrows():
             temp.append([instance['lat'],instance['long']])
         lat_long_list.append(temp)
-    df['Date']= pd.to_datetime(df['Date'])
+        
+    #converting it to datetime format
+    timelapse_df['Time']= pd.to_datetime(timelapse_df['Time'])
     #creating a time index
     time_index = []
-    for i in df['Date'].unique():
+    for i in timelapse_df['Time'].unique():
         time_index.append(i)
     #formatting the index
     date_strings = [d.strftime('%d/%m/%Y, %H:%M:%S') for d in time_index]
 
-    from folium.plugins import HeatMap
-    from folium.plugins import HeatMapWithTime
+
+
+
 
     #Choosing the map type 
-    m = folium.Map(location=[42.2808, -83.7430],zoom_start = 11,control_scale=True, tiles='openstreetmap',attr="Stadia.AlidadeSmoothDark")
-
+    timelapse_map = folium.Map(location=[42.2808, -83.7430],zoom_start = 5, tiles="openstreetmap",attr="Stadia.AlidadeSmoothDark")
     #Plot it on the map
-    HeatMapWithTime(lat_long_list,radius=10,auto_play=True,position='bottomright',name="cluster",index=date_strings,max_opacity=0.7).add_to(m)
+    HeatMapWithTime(lat_long_list,radius=10,auto_play=True,position='bottomright',name="cluster",index=date_strings,max_opacity=0.7).add_to(timelapse_map)
     # Display the map
-    folium.TileLayer('Stamen Terrain').add_to(m)
-    folium.TileLayer('Stamen Toner').add_to(m)
-    folium.TileLayer('Stamen Water Color').add_to(m)
-    folium.TileLayer('cartodbpositron').add_to(m)
-    folium.TileLayer('cartodbdark_matter').add_to(m)
-    folium.LayerControl().add_to(m)
-    st.subheader("Here's a timelapse of where you've been.")
-    folium_static(m)
+    # Adds tool to the top right
+    from folium.plugins import MeasureControl
+    timelapse_map.add_child(MeasureControl())
+    folium_static(timelapse_map)
 
 
-    ndf = df[['loc','lat','long']]
+    # # -------------------------------------------------------------------------------- #
+                ## BEGIN FOURSQUARE NO QUERY CODE ## 
+    # # -------------------------------------------------------------------------------- #
+
+    CLIENT_ID = 'PDLBYPAUCNCTOCDJ0MHINYM5X2MM5QLJUNBVV2JUNQPKWYPW' # your Foursquare ID
+    CLIENT_SECRET = 'FEI04Q3MFOROEJWTFW20V0ZOFVYOLLXZIZUJCLR1R2TCL3TU' # your Foursquare Secret
+    VERSION = '20180604'
+    LIMIT = 100
+
+
+    ndf = location_df[['loc','lat','long']]
     nndf = ndf.drop_duplicates()
     nndf["long_lat"] = list(zip(nndf["lat"], nndf["long"]))
+
     concat_df = pd.DataFrame()
-    concat_df2 = pd.DataFrame()
 
-    # for index, row in nndf.iterrows():
-    #     url = "https://api.foursquare.com/v3/places/nearby?ll={},{}&limit=20".format(round(row['lat'], 2),round(row['long'], 2))
-    # #     print(url)
-    #     headers = {
-    #     "Accept": "application/json",
-    #     "Authorization": "fsq3chVTJib0Z11IA8qFisvs8p7dkOJ6ky0WEbGTZ9FQPqc="
-    #     }
-    #     result = requests.request("GET", url, headers=headers).json()
-    #     result_df = json_normalize(result['results'])
-    #     result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
-    # #     print(result_df)
-    #     concat_df = concat_df.append(result_df)
-
-
-    user_input = st.text_input('Search Points of Interest')
     for index, row in nndf.iterrows():
-        url = "https://api.foursquare.com/v3/places/search?query={}&ll={},{}&radius=50000&limit=5".format(user_input, row['lat'], row['long'])
+        url = "https://api.foursquare.com/v3/places/nearby?ll={},{}&limit=5".format(round(row['lat'], 2),round(row['long'], 2))
     #     print(url)
         headers = {
         "Accept": "application/json",
@@ -423,12 +497,12 @@ try:
         result = requests.request("GET", url, headers=headers).json()
         result_df = json_normalize(result['results'])
         result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
-        # st.write(result_df)
     #     print(result_df)
-        concat_df2 = concat_df.append(result_df)
-
-    st.write(concat_df2)
-    new_map2 = folium.Map(location=[42.2808, -83.7430], zoom_start=15)
+        concat_df = concat_df.append(result_df)
+        
+        
+    # -------------------------------------------------------------------------------- #
+    foursquare_map_no_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
     # add a red circle marker to represent each visited locations
     for lat, long in zip(nndf.lat, nndf.long):
         folium.features.CircleMarker(
@@ -439,9 +513,67 @@ try:
             fill = True,
             fill_color='red',
             fill_opacity=0.6
-        ).add_to(new_map2)
-    
+        ).add_to(foursquare_map_no_query)
+    # add all venues as blue circle markers
+    for lat, long, label in zip(concat_df.lat, concat_df.long, concat_df.name):
+        folium.features.CircleMarker(
+            [lat, long],
+            radius=5,
+            color='blue',
+            popup=label,
+            fill = True,
+            fill_color='blue',
+            fill_opacity=0.6
+        ).add_to(foursquare_map_no_query)
 
+    folium_static(foursquare_map_no_query)
+    
+    # Adds tool to the top right
+    from folium.plugins import MeasureControl
+    foursquare_map_no_query.add_child(MeasureControl())
+    concat_df = concat_df[['name', 'distance']]
+    concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (miles)"})
+    concat_df["Distance (km)"] = concat_df["Distance (miles)"] / 1000 * 0.621371
+    # Take top 5 closest POI's
+    concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True).head(5)
+    st.table(concat_df)
+
+
+    # # -------------------------------------------------------------------------------- #
+                ## BEGIN FOURSQUARE USER QUERY CODE ## 
+    # # -------------------------------------------------------------------------------- #
+
+    user_input = st.text_input('Search Points of Interest')
+    concat_df2 = pd.DataFrame()
+    for index, row in nndf.iterrows():
+        url = "https://api.foursquare.com/v3/places/search?query={}&ll={},{}&radius=50000&limit=5".format(user_input, row['lat'], row['long'])
+    #     print(url)
+        headers = {
+        "Accept": "application/json",
+        "Authorization": "fsq3chVTJib0Z11IA8qFisvs8p7dkOJ6ky0WEbGTZ9FQPqc="
+        }
+        result = requests.request("GET", url, headers=headers).json()
+        result_df = json_normalize(result['results'])
+        result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
+    #     print(result_df)
+        concat_df2 = concat_df2.append(result_df)
+        
+    concat_df2 = concat_df2.dropna(subset=['lat', 'long', 'name'])
+
+
+    # -------------------------------------------------------------------------------- #
+    foursquare_map_with_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
+    # add a red circle marker to represent each visited locations
+    for lat, long in zip(nndf.lat, nndf.long):
+        folium.features.CircleMarker(
+            [lat, long],
+            radius=10,
+            color='red',
+            #popup=label,
+            fill = True,
+            fill_color='red',
+            fill_opacity=0.6
+        ).add_to(foursquare_map_with_query)
     # # add all venues as blue circle markers
     for lat, long, label in zip(concat_df2.lat, concat_df2.long, concat_df2.name):
         folium.features.CircleMarker(
@@ -452,9 +584,9 @@ try:
             fill = True,
             fill_color='blue',
             fill_opacity=0.6
-        ).add_to(new_map2)
-
-    folium_static(new_map2)
+        ).add_to(foursquare_map_with_query)
+        
+    folium_static(foursquare_map_with_query)
 
 
 
