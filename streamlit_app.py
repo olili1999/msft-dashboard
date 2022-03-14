@@ -486,6 +486,7 @@ try:
     _, row4_1, _, row4_2, _ = st.columns((0.01, 1,0.1, 1, 0.01))
 
     with row1_1, _lock: 
+        business_df = business_df.sort_values(by = "Date", ascending = True)
         st.table(business_df)
 
     home_and_work = location['Home & Work']
@@ -580,82 +581,82 @@ try:
         folium_static(cluster_map, width = 1500)
 
 
-    # # -------------------------------------------------------------------------------- #
-                ## BEGIN FOURSQUARE NO QUERY CODE ## 
-    # # -------------------------------------------------------------------------------- #
-    CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' 
-    CLIENT_SECRET = 'CTHTUE1JSINGUNVXSDL0JGPO1CRKOE312RYYA21LEBKE5ZSA' # your Foursquare Secret
-    VERSION = '20220313'
-    LIMIT = 100
+    # # # -------------------------------------------------------------------------------- #
+    #             ## BEGIN FOURSQUARE NO QUERY CODE ## 
+    # # # -------------------------------------------------------------------------------- #
+    # CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' 
+    # CLIENT_SECRET = 'CTHTUE1JSINGUNVXSDL0JGPO1CRKOE312RYYA21LEBKE5ZSA' # your Foursquare Secret
+    # VERSION = '20220313'
+    # LIMIT = 100
 
 
-    ndf = location_df[['lat','long']]
-    nndf = ndf.drop_duplicates(subset=['long', 'lat'])
+    # ndf = location_df[['lat','long']]
+    # nndf = ndf.drop_duplicates(subset=['long', 'lat'])
 
-    concat_df = pd.DataFrame()
+    # concat_df = pd.DataFrame()
     
-    for index, row in nndf.iterrows():
-        url = "https://api.foursquare.com/v3/places/nearby?ll={},{}&limit=5".format(round(row['lat'], 2),round(row['long'], 2))
-    #     print(url)
-        headers = {
-        "Accept": "application/json",
-        "Authorization": "fsq3chVTJib0Z11IA8qFisvs8p7dkOJ6ky0WEbGTZ9FQPqc="
-        }
-        result = requests.request("GET", url, headers=headers).json()
-        result_df = json_normalize(result['results'])
-        result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
-    #     print(result_df)
-        concat_df = concat_df.append(result_df)
+    # for index, row in nndf.iterrows():
+    #     url = "https://api.foursquare.com/v3/places/nearby?ll={},{}&limit=5".format(round(row['lat'], 2),round(row['long'], 2))
+    # #     print(url)
+    #     headers = {
+    #     "Accept": "application/json",
+    #     "Authorization": "fsq3chVTJib0Z11IA8qFisvs8p7dkOJ6ky0WEbGTZ9FQPqc="
+    #     }
+    #     result = requests.request("GET", url, headers=headers).json()
+    #     result_df = json_normalize(result['results'])
+    #     result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
+    # #     print(result_df)
+    #     concat_df = concat_df.append(result_df)
 
-    # -------------------------------------------------------------------------------- #
-    foursquare_map_no_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
-    # add a red circle marker to represent each visited locations
-    for lat, long in zip(nndf.lat, nndf.long):
-        folium.features.CircleMarker(
-            [lat, long],
-            radius=10,
-            color='red',
-            #popup=label,
-            fill = True,
-            fill_color='red',
-            fill_opacity=0.6
-        ).add_to(foursquare_map_no_query)
-    # add all venues as blue circle markers
-    for lat, long, label in zip(concat_df.lat, concat_df.long, concat_df.name):
-        folium.features.CircleMarker(
-            [lat, long],
-            radius=5,
-            color='blue',
-            popup=label,
-            fill = True,
-            fill_color='blue',
-            fill_opacity=0.6
-        ).add_to(foursquare_map_no_query)
+    # # -------------------------------------------------------------------------------- #
+    # foursquare_map_no_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
+    # # add a red circle marker to represent each visited locations
+    # for lat, long in zip(nndf.lat, nndf.long):
+    #     folium.features.CircleMarker(
+    #         [lat, long],
+    #         radius=10,
+    #         color='red',
+    #         #popup=label,
+    #         fill = True,
+    #         fill_color='red',
+    #         fill_opacity=0.6
+    #     ).add_to(foursquare_map_no_query)
+    # # add all venues as blue circle markers
+    # for lat, long, label in zip(concat_df.lat, concat_df.long, concat_df.name):
+    #     folium.features.CircleMarker(
+    #         [lat, long],
+    #         radius=5,
+    #         color='blue',
+    #         popup=label,
+    #         fill = True,
+    #         fill_color='blue',
+    #         fill_opacity=0.6
+    #     ).add_to(foursquare_map_no_query)
 
-    folium_static(foursquare_map_no_query)
+    # folium_static(foursquare_map_no_query)
 
 
-    # Adds tool to the top right
-    from folium.plugins import MeasureControl
-    foursquare_map_no_query.add_child(MeasureControl())
-    concat_df = concat_df[['name', 'distance']]
-    concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (meters)"})
-    concat_df["Distance (miles)"] = concat_df["Distance (meters)"] / 1000 * 0.621371
-    concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True)
-    concat_df = concat_df.drop_duplicates(subset='Location Name Near You', keep="last")
-    concat_df = concat_df[["Location Name Near You", "Distance (miles)"]]
+    # # Adds tool to the top right
+    # from folium.plugins import MeasureControl
+    # foursquare_map_no_query.add_child(MeasureControl())
+    # concat_df = concat_df[['name', 'distance']]
+    # concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (meters)"})
+    # concat_df["Distance (miles)"] = concat_df["Distance (meters)"] / 1000 * 0.621371
+    # concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True)
+    # concat_df = concat_df.drop_duplicates(subset='Location Name Near You', keep="last")
+    # concat_df = concat_df[["Location Name Near You", "Distance (miles)"]]
 
 
       
-    with row4_1, _lock:
-        st.subheader("We've identified this list of nearby locations of interest for you")
-        st.caption('Red dots represent each visited locations and Blue dots represent surrounding popular venues')
-        folium_static(foursquare_map_no_query)
+    # with row4_1, _lock:
+    #     st.subheader("We've identified this list of nearby locations of interest for you")
+    #     st.caption('Red dots represent each visited locations and Blue dots represent surrounding popular venues')
+    #     folium_static(foursquare_map_no_query)
 
-    with row4_2, _lock: 
-        st.subheader("This is a list of locations near you")
-        st.caption('These are all locations of interest in the map to the left near you in ascending order of proximity')
-        st.table(concat_df)
+    # with row4_2, _lock: 
+    #     st.subheader("This is a list of locations near you")
+    #     st.caption('These are all locations of interest in the map to the left near you in ascending order of proximity')
+    #     st.table(concat_df)
 
 
 
