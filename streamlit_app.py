@@ -583,9 +583,9 @@ try:
     # # -------------------------------------------------------------------------------- #
                 ## BEGIN FOURSQUARE NO QUERY CODE ## 
     # # -------------------------------------------------------------------------------- #
-    CLIENT_ID = 'PDLBYPAUCNCTOCDJ0MHINYM5X2MM5QLJUNBVV2JUNQPKWYPW' # your Foursquare ID
-    CLIENT_SECRET = 'FEI04Q3MFOROEJWTFW20V0ZOFVYOLLXZIZUJCLR1R2TCL3TU' # your Foursquare Secret
-    VERSION = '20180604'
+    CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' 
+    CLIENT_SECRET = 'CTHTUE1JSINGUNVXSDL0JGPO1CRKOE312RYYA21LEBKE5ZSA' # your Foursquare Secret
+    VERSION = '20220313'
     LIMIT = 100
 
 
@@ -593,7 +593,7 @@ try:
     nndf = ndf.drop_duplicates(subset=['long', 'lat'])
 
     concat_df = pd.DataFrame()
-
+    
     for index, row in nndf.iterrows():
         url = "https://api.foursquare.com/v3/places/nearby?ll={},{}&limit=5".format(round(row['lat'], 2),round(row['long'], 2))
     #     print(url)
@@ -606,9 +606,7 @@ try:
         result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
     #     print(result_df)
         concat_df = concat_df.append(result_df)
-    
 
-        
     # -------------------------------------------------------------------------------- #
     foursquare_map_no_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
     # add a red circle marker to represent each visited locations
@@ -634,8 +632,8 @@ try:
             fill_opacity=0.6
         ).add_to(foursquare_map_no_query)
 
+    folium_static(foursquare_map_no_query)
 
-  
 
     # Adds tool to the top right
     from folium.plugins import MeasureControl
@@ -646,6 +644,7 @@ try:
     concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True)
     concat_df = concat_df.drop_duplicates(subset='Location Name Near You', keep="last")
     concat_df = concat_df[["Location Name Near You", "Distance (miles)"]]
+
 
       
     with row4_1, _lock:
