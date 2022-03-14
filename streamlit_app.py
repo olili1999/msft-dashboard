@@ -37,9 +37,9 @@ from textblob import TextBlob
 import zipfile
 
 
-
-
-
+from pytrends.request import TrendReq
+pytrends = TrendReq(hl='en-US', tz=360)
+f=pd.read_csv('word_frequency.csv')
 
 # CSS to inject contained in a string
 hide_table_row_index = """
@@ -51,14 +51,57 @@ hide_table_row_index = """
 # Inject CSS with Markdown
 st.markdown(hide_table_row_index, unsafe_allow_html=True)
 
+def update_frequcny(ad):
+    kwords=[]
+    regex='<div class="c7O9k">((\w| |-|:)+)'
+    a=re.findall(regex,ad)
+    #turn into list
+    lst=[]
+    lst2=[]
+    num=0
+    for ele in a:
+        lst.append([ele[0]][0].strip())
+    #remove basic information
+    substring = ':'
+    for ele in lst:
+        if ele.startswith('Male')==False and ele.startswith('Female')==False and ele.endswith('years old')==False and (substring in ele)==False:
+            lst2.append(ele)
+    lst_first_appear=[]
+    #find out word appearing for the first time
+    for ele in lst2:
+        if ele not in list(f['word']):
+            lst_first_appear.append(ele)
+    lst3=lst_first_appear
+    #Google trend key word list prep
+    if len(lst3)>=5:
+        for num in range(5):
+            word=random.choice(lst3)
+            lst3.remove(word)
+    else:
+        kwords=lst_first_appear
+    kwords.append('Used Vehicles')
+    #Google trend api
+    dict_google=dict(pytrends.get_historical_interest(kwords, year_start=2022, month_start=3, day_start=6, hour_start=0, year_end=2022, month_end=3, day_end=8).iloc[-1])
+    #normalize the value
+    del dict_google['isPartial']
+    if dict_google['Used Vehicles']==0:
+        dict_google['Used Vehicles']=1
+    for key in dict_google.keys():
+        num=int(dict_google[key])*67/dict_google['Used Vehicles']
+        dict_google[key]=num
+    #Value for existed tags
+    existed_dict={}
+    for ele in lst2:
+        if ele in list(f['word']):
+            existed_dict[ele]=list(f.loc[f['word'] == ele]['Google_Trend _Frequency'])[0]
+    if len(dict_google)!=0:
+        for key in dict_google.keys():
+            existed_dict[key]=dict_google[key]
+    return existed_dict
 
 
-
-# google extract inferences code
 def extract_inference(ad):
     #extract_tags
-    # file = open(html_file, "r")
-    # ad=file.read()
     regex='<div class="c7O9k">((\w| |-|:)+)'
     a=re.findall(regex,ad)
     #turn into list
@@ -66,6 +109,10 @@ def extract_inference(ad):
     num=0
     for ele in a:
         lst.append([ele[0]][0].strip())
+    #frequency_dict
+
+    frq_dic=update_frequcny(ad)
+
     #extract specific tags we want
     age=''
     gender=''
@@ -98,33 +145,45 @@ def extract_inference(ad):
         if ':' not in ele:
             if ele not in games and ele not in music and ele!='Music' and ele!='Game':
                 lst_2.append(ele.lower())
+    #lst_habit=[]
+    #num_list=[]
+    #for num in range(7):    
+    #    ind=random.randrange(len(lst_2))
+    #    if ind in num_list:
+    #        num=num-1
+    #    else:
+    #        num_list.append(ind)
+    #        lst_habit.append(lst_2[ind].lower())
     lst_habit=[]
-    num_list=[]
-    for num in range(7):    
-        ind=random.randrange(len(lst_2))
-        if ind in num_list:
-            num=num-1
-        else:
-            num_list.append(ind)
-            lst_habit.append(lst_2[ind].lower())
-
+    if len(frq_dic)>=5:
+        for num in range(5):
+            a=min(frq_dic, key=frq_dic.get)
+            b=a.lower()
+            lst_habit.append(b)
+            del frq_dic[a]
+    else:
+        for num in range(len(frq_dic)):
+            a=min(frq_dic, key=frq_dic.get)
+            b=a.lower()
+            lst_habit.append(b)
+            del frq_dic[a]
     #write basic information
     if income!=None:
         if age!='' and gender!='':
-            final_str="According to the data Google extract from your activities, Google infers that you are a " +age+' '+gender+' with a '+income+' family income. '
+            final_str="According to the data Google extract from your activties, Google infers that you are a " +age+' '+gender+' with a '+income+' family income. '
         elif age=='' and gender!='':
-            final_str="According to the data Google extract from your activities, Google infers that you are a "+gender+' with a '+income+' family income. '
+            final_str="According to the data Google extract from your activties, Google infers that you are a "+gender+' with a '+income+' family income. '
         elif age!='' and gender=='':
-            final_str="According to the data Google extract from your activities, Google infers that you are " +age+' with a '+income+' family income. '
+            final_str="According to the data Google extract from your activties, Google infers that you are " +age+' with a '+income+' family income. '
         elif age=='' and gender=='':
-            final_str="According to the data Google extract from your activities, Google infers that you have a " +income+' family income. '
+            final_str="According to the data Google extract from your activties, Google infers that you have a " +income+' family income. '
     elif income==None:
         if age!='' and gender!='':
-            final_str="According to the data Google extract from your activities, Google infers that you are a " +age+' '+gender+'. '
+            final_str="According to the data Google extract from your activties, Google infers that you are a " +age+' '+gender+'. '
         elif age!='' and gender=='':
-            final_str="According to the data Google extract from your activities, Google infers that you are " +age+'. '
+            final_str="According to the data Google extract from your activties, Google infers that you are " +age+'. '
         elif age=='' and gender!='':
-            final_str="According to the data Google extract from your activities, Google infers that you are a "+gender+'. '
+            final_str="According to the data Google extract from your activties, Google infers that you are a "+gender+'. '
         else:
             final_str=''
     if parental_status!='' and marrial_status!='':
@@ -135,19 +194,19 @@ def extract_inference(ad):
         final_str=final_str+ 'Google also infers that you are '+parental_status+'. '
     #write habits
     if len(lst_habit)>4:
-        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
+        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
         final_str2+='Google also noticed that you are interested in '+lst_habit[2]+', '+ lst_habit[3]+' and '+lst_habit[4]+'. '
     elif len(lst_habit)==4:
-        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
+        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
         final_str2+='Google also noticed that you are interested in '+lst_habit[2]+' and '+lst_habit[3]+'. '
     elif len(lst_habit)==3:
-        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+', '+ lst_habit[1]+' and '+ lst_habit[2]+'. '
+        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+', '+ lst_habit[1]+' and '+ lst_habit[2]+'. '
     elif len(lst_habit)==2:
-        final_str2='From your activities and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
+        final_str2='From your activties and searches on Google, Google infers that you may be interested in '+lst_habit[0]+' and '+ lst_habit[1]+'. '
     elif len(lst_habit)==1:
-        final_str2='From your activities and searches on Google, Google notices that you may be interested in '+lst_habit[0]+'. '
+        final_str2='From your activties and searches on Google, Google notices that you may be interested in '+lst_habit[0]+'. '
     elif len(lst_habit)==0:
-        final_str2='Google knows nothing about your habits because of your limited activity on Google. '
+        final_str2='Google knows nothing about your habits because of your limited activty on Google. '
     #write catgorical habits
     if len(music)>1:
         final_str2+='Among different types of musics, you enjoyed listening to'
@@ -343,7 +402,7 @@ try:
 
 
 except: 
-    st.error("You need to upload more files. Make sure there are no duplicates")
+    st.error("You need to upload more files. Make sure there are no duplicates, and make sure you have uploaded the correct files and correct number of files from the YouTube video!")
 
 
 
