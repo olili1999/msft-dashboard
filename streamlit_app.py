@@ -426,7 +426,6 @@ except:
 
 st.header("Snapchat Has Been Tracking You")
 st.caption("We have created a series of different maps, visualizations, and tools to track your location history below. Each one has a slightly different functionality.")
-st.caption("NOTE: Some visualizations may take a few minutes or even more to load.")
 try: 
     uploaded_files= st.file_uploader("Upload your Snapchat location_history.JSON file here", accept_multiple_files=True, key= 1)
     # for uploaded_file in uploaded_files:
