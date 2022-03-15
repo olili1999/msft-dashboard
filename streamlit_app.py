@@ -556,7 +556,7 @@ try:
         timelapse_map.add_child(MeasureControl())
         st.subheader("Here's a timelapse of your location history")
         st.caption("Below you can see every day of location history Snapchat has tracked about you")
-        folium_static(timelapse_map, width = 1500)
+        folium_static(timelapse_map, width = 1600)
 
     # # # -------------------------------------------------------------------------------- #
     #             ## BEGIN CLUSTER MAP ## 
@@ -578,7 +578,7 @@ try:
         from folium.plugins import MeasureControl
         cluster_map.add_child(MeasureControl())
         # Display the map
-        folium_static(cluster_map, width = 1500)
+        folium_static(cluster_map, width = 1600)
 
 
     # # # -------------------------------------------------------------------------------- #
