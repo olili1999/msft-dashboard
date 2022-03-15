@@ -232,7 +232,7 @@ st.caption("We've created an insights dashboard just using the information Insta
 
 try: 
     uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, personal.json, and post_comments.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
-
+    st.caption("NOTE: The zipfile.zip file may take a long time to upload depending on the size of your data. Be patient and allow for 1-2 minutes of it.")
     sorted_files = []
     index = 0 
     for uploaded_file in uploaded_files:
