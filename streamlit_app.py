@@ -232,7 +232,7 @@ st.caption("We've created an insights dashboard just using the information Insta
 
 try: 
     uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, personal.json, and post_comments.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
-    st.caption("NOTE: The zipfile.zip file may take a long time to upload depending on the size of your data. Be patient and allow 1-2 minutes for it to finish uploading.")
+    # st.caption("NOTE: The zipfile.zip file may take a long time to upload depending on the size of your data. Be patient and allow 1-2 minutes for it to finish uploading.")
     sorted_files = []
     index = 0 
     for uploaded_file in uploaded_files:
@@ -255,10 +255,10 @@ try:
                 personal_information_json = json.load(file[2])
             elif name.startswith("post_comments"): 
                 post_comments_json = json.load(file[2])
-            elif name.startswith("zipfile"):
-                zipfile = zipfile.ZipFile(file[2])
-                size = sum([zinfo.file_size for zinfo in zipfile.filelist])
-                total_file_size = round(float(size) / 1000000,2)  # total file size in mB
+            # elif name.startswith("zipfile"):
+            #     zipfile = zipfile.ZipFile(file[2])
+            #     size = sum([zinfo.file_size for zinfo in zipfile.filelist])
+            #     total_file_size = round(float(size) / 1000000,2)  # total file size in mB
 
 
 
@@ -396,9 +396,9 @@ try:
         (.1, 1, .1))
 
 
-    with row5, _lock: 
-        num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
-        st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
+    # with row5, _lock: 
+    #     num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
+    #     st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
 
 
 except: 
@@ -578,84 +578,6 @@ try:
         cluster_map.add_child(MeasureControl())
         # Display the map
         folium_static(cluster_map, width = 1000)
-
-
-    # # # -------------------------------------------------------------------------------- #
-    #             ## BEGIN FOURSQUARE NO QUERY CODE ## 
-    # # # -------------------------------------------------------------------------------- #
-    # CLIENT_ID = 'JKHM1V3IJMGJTDH13VB2UKKYNLHN0N3XG4UENX0JEKBUZSMP' 
-    # CLIENT_SECRET = 'CTHTUE1JSINGUNVXSDL0JGPO1CRKOE312RYYA21LEBKE5ZSA' # your Foursquare Secret
-    # VERSION = '20220313'
-    # LIMIT = 100
-
-
-    # ndf = location_df[['lat','long']]
-    # nndf = ndf.drop_duplicates(subset=['long', 'lat'])
-
-    # concat_df = pd.DataFrame()
-    
-    # for index, row in nndf.iterrows():
-    #     url = "https://api.foursquare.com/v3/places/nearby?ll={},{}&limit=5".format(round(row['lat'], 2),round(row['long'], 2))
-    # #     print(url)
-    #     headers = {
-    #     "Accept": "application/json",
-    #     "Authorization": "fsq3chVTJib0Z11IA8qFisvs8p7dkOJ6ky0WEbGTZ9FQPqc="
-    #     }
-    #     result = requests.request("GET", url, headers=headers).json()
-    #     result_df = json_normalize(result['results'])
-    #     result_df = result_df.rename(columns={"geocodes.main.latitude": "lat", "geocodes.main.longitude": "long", "location.formatted_address": "address"})
-    # #     print(result_df)
-    #     concat_df = concat_df.append(result_df)
-
-    # # -------------------------------------------------------------------------------- #
-    # foursquare_map_no_query = folium.Map(location=[42.2808, -83.7430], zoom_start=7)
-    # # add a red circle marker to represent each visited locations
-    # for lat, long in zip(nndf.lat, nndf.long):
-    #     folium.features.CircleMarker(
-    #         [lat, long],
-    #         radius=10,
-    #         color='red',
-    #         #popup=label,
-    #         fill = True,
-    #         fill_color='red',
-    #         fill_opacity=0.6
-    #     ).add_to(foursquare_map_no_query)
-    # # add all venues as blue circle markers
-    # for lat, long, label in zip(concat_df.lat, concat_df.long, concat_df.name):
-    #     folium.features.CircleMarker(
-    #         [lat, long],
-    #         radius=5,
-    #         color='blue',
-    #         popup=label,
-    #         fill = True,
-    #         fill_color='blue',
-    #         fill_opacity=0.6
-    #     ).add_to(foursquare_map_no_query)
-
-    # folium_static(foursquare_map_no_query)
-
-
-    # # Adds tool to the top right
-    # from folium.plugins import MeasureControl
-    # foursquare_map_no_query.add_child(MeasureControl())
-    # concat_df = concat_df[['name', 'distance']]
-    # concat_df = concat_df.rename(columns = {"name": "Location Name Near You", "distance": "Distance (meters)"})
-    # concat_df["Distance (miles)"] = concat_df["Distance (meters)"] / 1000 * 0.621371
-    # concat_df = concat_df.sort_values(by = "Distance (miles)", ascending = True)
-    # concat_df = concat_df.drop_duplicates(subset='Location Name Near You', keep="last")
-    # concat_df = concat_df[["Location Name Near You", "Distance (miles)"]]
-
-
-      
-    # with row4_1, _lock:
-    #     st.subheader("We've identified this list of nearby locations of interest for you")
-    #     st.caption('Red dots represent each visited locations and Blue dots represent surrounding popular venues')
-    #     folium_static(foursquare_map_no_query)
-
-    # with row4_2, _lock: 
-    #     st.subheader("This is a list of locations near you")
-    #     st.caption('These are all locations of interest in the map to the left near you in ascending order of proximity')
-    #     st.table(concat_df)
 
 
 
