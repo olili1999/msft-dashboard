@@ -265,11 +265,21 @@ try:
 
     # profile information
     user_name = personal_information_json['profile_user'][0]['string_map_data']['Username']['value']
-    phone_number = personal_information_json['profile_user'][0]['string_map_data']['Phone Number']['value']
-    email = personal_information_json['profile_user'][0]['string_map_data']['Email']['value']
-    gender = personal_information_json['profile_user'][0]['string_map_data']['Gender']['value']
-    primary_account_location = account_based_json['inferred_data_primary_location'][0]['string_map_data']['City Name']['value']
+    try: 
+        phone_number = personal_information_json['profile_user'][0]['string_map_data']['Phone Number']['value']
+    except: 
+        phone_number = "No Phone Number Found"
 
+    email = personal_information_json['profile_user'][0]['string_map_data']['Email']['value']
+
+    try: 
+        gender = personal_information_json['profile_user'][0]['string_map_data']['Gender']['value']
+    except: 
+        gender = "No Gender Specified"
+    try: 
+        primary_account_location = account_based_json['inferred_data_primary_location'][0]['string_map_data']['City Name']['value']
+    except: 
+        primary_account_location = "No primary location found"
 
     #Parse through the liked_posts.json file to take count of all of the posts I've liked and which account they belong to
     liked_posts = []
