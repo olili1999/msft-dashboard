@@ -397,13 +397,13 @@ try:
         df_pos_neg_comments = df_pos_neg_comments.style.set_properties(**{'text-align': 'left'}).hide_index()
         st.table(df_pos_neg_comments)
 
-    line1_spacer1, line1_1, line1_spacer2 = st.columns((.1, 3.2, .1))
-    with line1_1:
-        st.header('Total Data Collected')
+    # line1_spacer1, line1_1, line1_spacer2 = st.columns((.1, 3.2, .1))
+    # with line1_1:
+    #     st.header('Total Data Collected')
 
-    st.write('')
-    row5_space1, row5, row5_space5 = st.columns(
-        (.1, 1, .1))
+    # st.write('')
+    # row5_space1, row5, row5_space5 = st.columns(
+    #     (.1, 1, .1))
 
 
     # with row5, _lock: 
