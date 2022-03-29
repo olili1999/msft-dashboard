@@ -231,7 +231,7 @@ st.header("Instagram Data Dashboard")
 st.caption("We've created an insights dashboard just using the information Instagram tracks about you.")
 
 try: 
-    uploaded_files = st.file_uploader("Upload your account_based_in.json, advertisers.json, liked.json, personal.json, and post_comments.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
+    uploaded_files = st.file_uploader("Upload your account_based_in.json, liked_posts.json, personal_information.json, and post_comments.json files to create your personal Instagram Data Dashboard", accept_multiple_files=True, key = 0)
     # st.caption("NOTE: The zipfile.zip file may take a long time to upload depending on the size of your data. Be patient and allow 1-2 minutes for it to finish uploading.")
     sorted_files = []
     index = 0 
@@ -247,8 +247,8 @@ try:
             name = str(file[1])
             if name.startswith("account_based_in"): 
                 account_based_json = json.load(file[2])
-            elif name.startswith("advertisers"):
-                advertisers_using_json = json.load(file[2])
+            # elif name.startswith("advertisers"):
+            #     advertisers_using_json = json.load(file[2])
             elif name.startswith("liked"):
                 liked_posts_json = json.load(file[2])
             elif name.startswith("personal"):
@@ -410,6 +410,10 @@ try:
     #     num_advertisers_using_data = len(advertisers_using_json['ig_custom_audiences_all_types'])
     #     st.write("Instagram has collected a total of " + str(total_file_size) + " megabytes of data about you. There are " + str(num_advertisers_using_data) + " advertisers using your Instagram data.")
 
+    finished_code = '<p style="font-family:Courier; color:Blue; font-size: 20px;">Instagram Code: 12345678910</p>'
+    st.markdown(finished_code, unsafe_allow_html=True)
+    
+
 
 except: 
     st.error("You need to upload more files. Make sure there are no duplicates, and make sure you have uploaded the correct files and correct number of files from the YouTube video!")
@@ -429,6 +433,10 @@ try:
         # To read file as string:
         string_data = stringio.read()
         st.write(extract_inference(string_data))
+        finished_code = '<p style="font-family:Courier; color:Blue; font-size: 20px;">Google Code: 42424242</p>'
+        st.markdown(finished_code, unsafe_allow_html=True)
+
+
 except:     
     st.error("Error! You may have uploaded a file of incorrect type, or the incorrect file altogether. Make sure it is the HTML file specified in the YouTube video.")
 
@@ -592,7 +600,8 @@ try:
         folium_static(cluster_map, width = 1000)
 
 
-
+    finished_code = '<p style="font-family:Courier; color:Blue; font-size: 20px;">Snapchat Code: 4200</p>'
+    st.markdown(finished_code, unsafe_allow_html=True)
 
 except:     
     st.error("Error! You may have uploaded a file of incorrect type, or the incorrect file altogether. Make sure it is the JSON file specified in the YouTube video.")
