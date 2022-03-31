@@ -226,7 +226,7 @@ def extract_inference(ad):
 
 
 st.title('Your Social Media Data Dashboard')
-st.caption("NOTE: None of your personal data you upload to this dashboard will be saved by this research team.")
+st.write("NOTE: None of your personal data you upload to this dashboard will be saved by this research team.")
 st.header("Instagram Data Dashboard")
 st.caption("We've created an insights dashboard just using the information Instagram tracks about you.")
 
