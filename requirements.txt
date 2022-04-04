@@ -11,3 +11,4 @@ streamlit==1.5.0
 streamlit_folium==0.6.0
 textblob==0.17.1
 wordcloud==1.8.1
+click==8.0.4
